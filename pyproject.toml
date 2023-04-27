@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "ezfinpy"
+version = "0.1.0"
+description = ""
+authors = ["renanmoretto <himynameisrenan@outlook.com>"]
+readme = "README.md"
+license = "MIT"
+repository = "https://github.com/renanmoretto/ezfinpy"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pandas = "^1.5.0"
+numpy = "^1.23.0"
+datetime = "^4.9"
+matplotlib = "^3.6.0"
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.22.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
