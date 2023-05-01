@@ -10,9 +10,10 @@ repository = "https://github.com/renanmoretto/ezfinpy"
 [tool.poetry.dependencies]
 python = ">=3.10"
 pandas = ">=1.5.0"
-numpy = ">=1.23.0"
 datetime = ">=4.9"
 matplotlib = ">=3.6.0"
+ruff = "^0.0.263"
+numpy = "^1.24.3"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.22.0"
@@ -20,3 +21,8 @@ ipykernel = "^6.22.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+ignore = [
+    'E501',
+]

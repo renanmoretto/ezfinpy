@@ -4,7 +4,7 @@ import numpy as np
 from dataclasses import dataclass
 from pandas import DataFrame, Series
 
-from .utils import get_rebalance_dates
+from .utils import get_sim_rebal_dates
 
 @dataclass
 class SimResult:
@@ -33,14 +33,14 @@ def validate_weights(weights):
         )
 
 
-def simulate_without_rebalance(prices, start_weights: dict | str = "ew") -> SimResult:
-    validate_weights(start_weights)
+def simulate_without_rebalance(prices, starting_weights: dict | str = "ew") -> SimResult:
+    validate_weights(starting_weights)
 
-    if start_weights == "ew":
+    if starting_weights == "ew":
         values = prices.pct_change().fillna(0).add(1).cumprod()
         sim_result = values.sum(axis=1).pct_change().fillna(0).add(1).cumprod()
 
-    if isinstance(start_weights, dict):
+    if isinstance(starting_weights, dict):
         tickers = prices.columns.to_list()
 
         normalized_prices = prices.pct_change().fillna(0).add(1).cumprod()
@@ -48,7 +48,7 @@ def simulate_without_rebalance(prices, start_weights: dict | str = "ew") -> SimR
         weighted_values = pd.DataFrame()
         for ticker in tickers:
             weighted_values[ticker] = normalized_prices[ticker].mul(
-                start_weights[ticker]
+                starting_weights[ticker]
             )
         values = weighted_values.sum(axis=1)
         sim_result = values.pct_change().fillna(0).add(1).cumprod()
@@ -71,49 +71,100 @@ def simulate_without_rebalance(prices, start_weights: dict | str = "ew") -> SimR
 
 def simulate_with_rebalance(
     prices: DataFrame,
-    rebal_weights: dict | str,
+    rebal_weights: dict | str = 'ew',
     rebal_freq: str = "1M",
 ) -> SimResult:
     validate_weights(rebal_weights)
 
     tickers = prices.columns.to_list()
     n_tickers = len(prices.columns)
-    returns = prices.pct_change().fillna(0)
-    all_dates = prices.index.to_list()
-    rebal_dates = get_rebalance_dates(all_dates, rebal_freq)
 
     if rebal_weights == "ew":
         weights = pd.Series(index=tickers, dtype=np.float64).fillna(1 / n_tickers).to_dict()
-
     if isinstance(rebal_weights, dict):
         weights = rebal_weights.copy()
 
-    values = pd.DataFrame()
-    for i, date in enumerate(all_dates):
-        for ticker in tickers:
+    returns_array = prices.pct_change().fillna(0).values
+
+    all_dates_array = prices.index.values
+
+    rebal_dates = get_sim_rebal_dates(prices, rebal_freq)
+    rebal_dates_array = np.insert(rebal_dates.values, 0, all_dates_array[0]) # first day
+
+    values = np.zeros((len(all_dates_array), len(tickers)))
+    total_value = []
+    for i, date in enumerate(all_dates_array):
+        for j, ticker in enumerate(tickers):
             if i == 0:
-                values.loc[date, ticker] = 1
+                values[i, j] = 1 * weights.get(ticker)
             else:
-                if date not in rebal_dates:
-                    values.loc[date, ticker] = values.iloc[i - 1][ticker] * (
-                        1 + returns.loc[date, ticker]
-                    )
+                if all_dates_array[i-1] in rebal_dates_array:
+                    values[i, j] = (total_value[i-1] * weights.get(ticker)) * (1 + returns_array[i, j])
                 else:
-                    values.loc[date, ticker] = (
-                        total_value.iloc[i - 1] * weights[ticker]
-                    ) * (1 + returns.loc[date, ticker])
-        total_value = values.sum(axis=1)
+                    values[i, j] = values[i-1, j] * (1 + returns_array[i, j])
+        total_value.append(values[i,:].sum())
 
-    exposure = values.apply(lambda row: row / total_value.loc[row.name], axis=1)
+    exposure = values / np.array(total_value)[:, np.newaxis]
 
-    sim_result = pd.DataFrame(total_value).pct_change().fillna(0).add(1).cumprod()
-    sim_result.columns = ["sim"]
+    values = pd.DataFrame(values, index=all_dates_array, columns=tickers)
+    exposure = pd.DataFrame(exposure, index=all_dates_array, columns=tickers)
+    sim_result = pd.DataFrame(total_value, index=all_dates_array, columns=['sim'])
 
     return SimResult(
         prices = prices,
         values = values,
         exposure = exposure,
         result = sim_result,
-        all_dates = all_dates,
+        all_dates = prices.index,
+        rebal_dates = rebal_dates,
+    )
+
+def cython_simulate_with_rebalance(
+    prices: DataFrame,
+    rebal_weights: dict | str = 'ew',
+    rebal_freq: str = "1M",
+) -> SimResult:
+    validate_weights(rebal_weights)
+
+    tickers = prices.columns.to_list()
+    n_tickers = len(prices.columns)
+
+    if rebal_weights == "ew":
+        weights = pd.Series(index=tickers, dtype=np.float64).fillna(1 / n_tickers).to_dict()
+    if isinstance(rebal_weights, dict):
+        weights = rebal_weights.copy()
+
+    returns_array = prices.pct_change().fillna(0).values
+
+    all_dates_array = prices.index.values
+
+    rebal_dates = get_sim_rebal_dates(prices, rebal_freq)
+    rebal_dates_array = np.insert(rebal_dates.values, 0, all_dates_array[0]) # first day
+
+    values = np.zeros((len(all_dates_array), len(tickers)))
+    total_value = []
+    for i, date in enumerate(all_dates_array):
+        for j, ticker in enumerate(tickers):
+            if i == 0:
+                values[i, j] = 1 * weights.get(ticker)
+            else:
+                if all_dates_array[i-1] in rebal_dates_array:
+                    values[i, j] = (total_value[i-1] * weights.get(ticker)) * (1 + returns_array[i, j])
+                else:
+                    values[i, j] = values[i-1, j] * (1 + returns_array[i, j])
+        total_value.append(values[i,:].sum())
+
+    exposure = values / np.array(total_value)[:, np.newaxis]
+
+    values = pd.DataFrame(values, index=all_dates_array, columns=tickers)
+    exposure = pd.DataFrame(exposure, index=all_dates_array, columns=tickers)
+    sim_result = pd.DataFrame(total_value, index=all_dates_array, columns=['sim'])
+
+    return SimResult(
+        prices = prices,
+        values = values,
+        exposure = exposure,
+        result = sim_result,
+        all_dates = prices.index,
         rebal_dates = rebal_dates,
     )

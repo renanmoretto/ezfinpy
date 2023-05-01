@@ -38,7 +38,7 @@ def simulate(
         )
     else:
         return simulate_without_rebalance(
-            prices=prices, start_weights=weights
+            prices=prices, starting_weights=weights
         )
 
 # utils
@@ -60,7 +60,7 @@ def include(_self, data: Series | DataFrame | list):
     elif isinstance(data, (Series, DataFrame)):
         _self = pd.concat([_self, data], axis=1)
     else:
-        raise ValueError(f"Invalid arg type.")
+        raise ValueError("Invalid arg type.")
     return _self
 
 def exclude(_self, names: str | list | Series | DataFrame):
@@ -100,7 +100,7 @@ def ezprint():
 def ezstats():
     pass
 
-def ezfreq(data, freq):
+def ezresample(data, freq):
     all_dates = data.index
     dates = pd.DataFrame(index=all_dates)
     dates['correct_date'] = dates.index
@@ -122,7 +122,7 @@ funcs = [
     sharpe,
     ezplot,
     ezprint,
-    ezfreq,
+    ezresample,
 ]
 for pandas_type in [Series, DataFrame]:
     for func in funcs:
