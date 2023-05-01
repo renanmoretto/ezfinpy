@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ezfinpy"
-version = "0.1.1"
+version = "0.1.2"
 description = ""
 authors = ["renanmoretto <himynameisrenan@outlook.com>"]
 readme = "README.md"
@@ -13,7 +13,7 @@ pandas = ">=1.5.0"
 datetime = ">=4.9"
 matplotlib = ">=3.6.0"
 ruff = "^0.0.263"
-numpy = "^1.24.3"
+numpy = ">=1.22.0"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.22.0"

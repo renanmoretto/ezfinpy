@@ -1,5 +1,7 @@
 import pandas as pd
 from pandas import Series, DataFrame
+import matplotlib
+import matplotlib.pyplot as plt
 
 from .simulator import SimResult, simulate_without_rebalance, simulate_with_rebalance
 
@@ -91,8 +93,44 @@ def sharpe(prices, risk_free: float):
 
 # modifiers
 
-def ezplot():
-    pass
+def ezplot(
+        data: Series | DataFrame,
+        drawdowns: bool = True,
+        rolling_volatility: bool = True,
+        returns: bool = False,
+        **kw,
+    ) -> None:
+
+    prices = data.to_prices() if returns else data.copy()
+
+    plot_info = [{'dataframe': prices, 'ylabel': 'Prices'}]
+
+    if drawdowns:
+        drawdowns_data = prices.drawdown()
+        plot_info.append({'dataframe': drawdowns_data, 'ylabel': 'Drawdowns (%)'})
+
+    if rolling_volatility:
+        rolling_volatility_data = prices.rolling_volatility()
+        plot_info.append({'dataframe': rolling_volatility_data, 'ylabel': 'Rolling Volatility (%)'})
+
+    fig, axes = plt.subplots(nrows=len(plot_info), ncols=1, **kw)
+
+    for i, plot in enumerate(plot_info):
+        row = i
+        ax = axes[row]
+        ax.set_ylabel(plot['ylabel'])
+        ax.grid()
+        
+        if row==0:
+            ax.plot(plot['dataframe'].index, plot['dataframe'].values, linewidth=2, label=prices.columns)
+            ax.legend(prices.columns.to_list())
+        else:
+            ax.plot(plot['dataframe'].index, plot['dataframe'].values, linewidth=2)
+
+    title = ''
+    fig.suptitle(title, fontsize=16)
+
+    plt.show()
 
 def ezprint():
     pass
