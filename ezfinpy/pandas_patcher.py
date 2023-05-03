@@ -3,6 +3,7 @@ from pandas import Series, DataFrame
 import matplotlib.pyplot as plt
 
 from .simulator import simulate
+from .stats import SingleStats, GroupStats
 
 # utils
 
@@ -93,11 +94,11 @@ def ezplot(
 
     plt.show()
 
-def ezprint():
-    pass
-
-def ezstats():
-    pass
+def print_stats(prices):
+    if isinstance(prices, DataFrame):
+        GroupStats(prices).print_stats()
+    if isinstance(prices, Series):
+        SingleStats(prices).print_stats()
 
 def ezresample(data, freq):
     all_dates = data.index
@@ -122,7 +123,7 @@ def patch_pandas():
         cagr,
         sharpe,
         ezplot,
-        ezprint,
+        print_stats,
         ezresample,
     ]
     for pandas_type in [Series, DataFrame]:

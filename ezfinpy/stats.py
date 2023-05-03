@@ -7,7 +7,6 @@ class SingleStats:
     
     """
     def __init__(self, prices: Series, risk_free: float = 0.0):
-
         if not isinstance(prices, Series):
             raise ValueError("Can't create a SingleStats using a Dataframe. Please pass prices as Series.")
 
@@ -65,8 +64,37 @@ class SingleStats:
             ['Worst Year', f"{self.stats['worst_year']:,.2%}"],
         ]
     
-    def print_stats():
-        ...
+    def print_stats(self):
+        print(tabulate(self.tabulated_stats, headers='firstrow'))
 
 class GroupStats:
-    ...
+    def __init__(self, prices: DataFrame, risk_free: float = 0.0):
+        if not isinstance(prices, DataFrame):
+            raise ValueError("Please pass prices as DataFrame.")
+        if len(prices.columns) < 2:
+            raise ValueError("Number of securities not valid. Length of 'prices.columns' has to be bigger than 1.")
+        
+        self.prices = prices
+
+        self.group_list = [SingleStats(prices=prices[asset], risk_free=0.0) for asset in prices.columns]
+
+        self.group_stats = {}
+        for single_stat in self.group_list:
+            self.group_stats.update({single_stat.name: single_stat.stats})
+
+
+        # generate tabulated table for the group
+        tabulated_table = []
+        for i, stat in enumerate(self.group_list):
+            if i == 0:
+                for stat_tabulated_row in stat.tabulated_stats:
+                    row_key = stat_tabulated_row[0]
+                    value = stat_tabulated_row[1]
+                    tabulated_table.append([row_key, value])
+            else:
+                for row, value in zip(tabulated_table, stat.tabulated_stats):
+                    row.append(value[1])            
+        self.tabulated_stats = tabulated_table
+
+    def print_stats(self):
+        print(tabulate(self.tabulated_stats, headers='firstrow'))
