@@ -19,7 +19,7 @@ class SingleStats:
 
         if self.prices.index.to_series().diff().min() == pd.Timedelta('1 days'):
             self.best_day = self.prices.pct_change().max()
-            self.worst_day = self.prices.pct_change().max()
+            self.worst_day = self.prices.pct_change().min()
         else:
             self.best_day = None
             self.worst_day = None
