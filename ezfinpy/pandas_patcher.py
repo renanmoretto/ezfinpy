@@ -2,45 +2,7 @@ import pandas as pd
 from pandas import Series, DataFrame
 import matplotlib.pyplot as plt
 
-from .simulator import SimResult, simulate_without_rebalance, simulate_with_rebalance
-
-# simulation
-
-def simulate(
-    prices,
-    rebalance: bool,
-    weights: str | dict = "ew",
-    rebal_freq: str = "1M",
-    ) -> SimResult:
-    """
-    Run the simulation.
-    -----
-    parameters:
-        rebalance: bool (required)
-            If 'True', the simulation will rebalance itself.
-
-        weights: str or dict, default 'ew'
-            If dict, than it is the weight for each asset (number between 0 and 1),
-            The sum can't be different than one.
-            Example:
-                asset_weights = {
-                    'asset1': 0.3,
-                    'asset2': 0.2,
-                    'asset3': 0.5,
-                }
-            If 'ew', it runs the simulation using equal weight for all assets (1 / number of assets).
-
-        rebal_freq: str, default '1M'
-            Rebalance frequency. Has the same valid inputs as pandas.DataFrame.resample() function.
-    """
-    if rebalance:
-        return simulate_with_rebalance(
-            prices=prices, rebal_weights=weights, rebal_freq=rebal_freq
-        )
-    else:
-        return simulate_without_rebalance(
-            prices=prices, starting_weights=weights
-        )
+from .simulator import simulate
 
 # utils
 
