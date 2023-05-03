@@ -1,6 +1,5 @@
 import pandas as pd
 from pandas import Series, DataFrame
-import matplotlib
 import matplotlib.pyplot as plt
 
 from .simulator import SimResult, simulate_without_rebalance, simulate_with_rebalance
@@ -45,7 +44,7 @@ def simulate(
 
 # utils
 
-def base(data, base=1):
+def rebase(data, base=1):
     return data.div(data.iloc[0]).mul(base)
 
 def to_prices(returns):
@@ -146,23 +145,25 @@ def ezresample(data, freq):
     resampled_data = data.loc[dates['correct_date'].values].copy()
     return resampled_data
 
-funcs = [
-    simulate,
-    base,
-    to_prices,
-    include,
-    exclude,
-    total_return,
-    drawdown,
-    volatility,
-    rolling_volatility,
-    cagr,
-    sharpe,
-    ezplot,
-    ezprint,
-    ezresample,
-]
-for pandas_type in [Series, DataFrame]:
-    for func in funcs:
-        setattr(pandas_type, func.__name__, func)
+
+def patch():
+    funcs = [
+        simulate,
+        rebase,
+        to_prices,
+        include,
+        exclude,
+        total_return,
+        drawdown,
+        volatility,
+        rolling_volatility,
+        cagr,
+        sharpe,
+        ezplot,
+        ezprint,
+        ezresample,
+    ]
+    for pandas_type in [Series, DataFrame]:
+        for func in funcs:
+            setattr(pandas_type, func.__name__, func)
 

@@ -1,1 +1,3 @@
-from .pandas_patcher import *
+from .pandas_patcher import patch
+
+patch()
