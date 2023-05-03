@@ -108,7 +108,7 @@ def ezresample(data, freq):
     return resampled_data
 
 
-def patch():
+def patch_pandas():
     funcs = [
         simulate,
         rebase,

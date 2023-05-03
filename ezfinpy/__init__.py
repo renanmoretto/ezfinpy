@@ -1,3 +1,3 @@
-from .pandas_patcher import patch
+from .pandas_patcher import patch_pandas
 
-patch()
+patch_pandas()
