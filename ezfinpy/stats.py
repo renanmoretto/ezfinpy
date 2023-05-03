@@ -78,7 +78,6 @@ class GroupStats:
         self.risk_free = risk_free
 
         self.group_list = [SingleStats(prices=prices[asset], risk_free=risk_free) for asset in prices.columns]
-
         self.group_stats = {}
         for single_stat in self.group_list:
             self.group_stats.update({single_stat.name: single_stat.stats})
