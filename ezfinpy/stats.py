@@ -75,8 +75,9 @@ class GroupStats:
             raise ValueError("Number of securities not valid. Length of 'prices.columns' has to be bigger than 1.")
         
         self.prices = prices
+        self.risk_free = risk_free
 
-        self.group_list = [SingleStats(prices=prices[asset], risk_free=0.0) for asset in prices.columns]
+        self.group_list = [SingleStats(prices=prices[asset], risk_free=risk_free) for asset in prices.columns]
 
         self.group_stats = {}
         for single_stat in self.group_list:

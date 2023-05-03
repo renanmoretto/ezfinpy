@@ -94,11 +94,11 @@ def ezplot(
 
     plt.show()
 
-def print_stats(prices):
+def print_stats(prices, risk_free: float = 0.0):
     if isinstance(prices, DataFrame):
-        GroupStats(prices).print_stats()
+        GroupStats(prices, risk_free=risk_free).print_stats()
     if isinstance(prices, Series):
-        SingleStats(prices).print_stats()
+        SingleStats(prices, risk_free=risk_free).print_stats()
 
 def ezresample(data, freq):
     all_dates = data.index
